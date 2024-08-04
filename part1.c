@@ -26,6 +26,7 @@ void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
             for (int n3 = 0; n3 < N3; n3++) {
                 sum = 0.0;
                 count = 0;
+                #pragma omp parallel for collapse(3) reduction(+:sum, count) default(none) shared(u) firstprivate(n1, n2, n3)
                 for (int l1 = imax(0, n1 - ml); l1 <= imin(n1 + ml, N1 - 1); l1++) {
                     for (int l2 = imax(0, n2 - ml); l2 <= imin(n2 + ml, N2 - 1); l2++) {
                         for (int l3 = imax(0, n3 - ml); l3 <= imin(n3 + ml, N3 - 1); l3++) {
