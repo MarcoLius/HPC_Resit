@@ -7,7 +7,7 @@
 
 
 void init(double u[N1][N2][N3]) {
-    #pragma omp parallel for default(shared) collapse(3)
+    #pragma omp parallel for default(shared) schedule(static) collapse(3)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -72,7 +72,7 @@ void stat(double *stats, const double u[N1][N2][N3]) {
             }
         }
     }
-    #pragma omp parallel for default(shared) reduction(+:uvar) collapse(3)
+    #pragma omp parallel for default(shared) reduction(+:uvar) schedule(static) collapse(3)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
