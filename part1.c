@@ -7,7 +7,7 @@
 
 
 void init(double u[N1][N2][N3]) {
-    #pragma omp parallel for collapse(3) default(none) shared(N1, N2, N3, u)
+    #pragma omp parallel for collapse(3) default(none) shared(u)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -20,7 +20,7 @@ void init(double u[N1][N2][N3]) {
 void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
     double sum;
     int count;
-    #pragma omp parallel for collapse(3) default(none) private(sum, count) shared(N1, N2, N3, ml, u, du)
+    #pragma omp parallel for collapse(3) default(none) private(sum, count) shared(u, du)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -41,7 +41,7 @@ void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
 };
 
 void step(double u[N1][N2][N3], const double du[N1][N2][N3]) {
-    #pragma omp parallel for collapse(3) default(none) shared(N1, N2, N3, r, u, du)
+    #pragma omp parallel for collapse(3) default(none) shared(u, du)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -57,7 +57,7 @@ void stat(double *stats, const double u[N1][N2][N3]) {
     double umin = 100.0;
     double umax = -100.0;
 
-    #pragma omp parallel for collapse(3) default(none) shared(N1, N2, N3, u, stats) reduction(+:mean) reduction(min:umin) reduction(max:umax)
+    #pragma omp parallel for collapse(3) default(none) shared(u, stats) reduction(+:mean) reduction(min:umin) reduction(max:umax)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -71,7 +71,7 @@ void stat(double *stats, const double u[N1][N2][N3]) {
             }
         }
     }
-    #pragma omp parallel for collapse(3) default(none) shared(N1, N2, N3, u, mean) reduction(+:uvar)
+    #pragma omp parallel for collapse(3) default(none) shared(u, mean) reduction(+:uvar)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
