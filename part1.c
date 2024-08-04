@@ -7,7 +7,7 @@
 
 
 void init(double u[N1][N2][N3]) {
-    #pragma omp parallel for collapse(3) default(none) shared(u)
+    #pragma omp parallel for collapse(3) default(shared)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -20,13 +20,13 @@ void init(double u[N1][N2][N3]) {
 void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
     double sum;
     int count;
-    #pragma omp parallel for collapse(3) default(none) private(sum, count) shared(u, du)
+    #pragma omp parallel for collapse(3) default(shared) private(sum, count)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
                 sum = 0.0;
                 count = 0;
-                #pragma omp parallel for collapse(3) reduction(+:sum, count) default(none) shared(u) firstprivate(n1, n2, n3)
+                #pragma omp parallel for collapse(3) reduction(+:sum, count) default(shared) firstprivate(n1, n2, n3)
                 for (int l1 = imax(0, n1 - ml); l1 <= imin(n1 + ml, N1 - 1); l1++) {
                     for (int l2 = imax(0, n2 - ml); l2 <= imin(n2 + ml, N2 - 1); l2++) {
                         for (int l3 = imax(0, n3 - ml); l3 <= imin(n3 + ml, N3 - 1); l3++) {
@@ -42,7 +42,7 @@ void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
 };
 
 void step(double u[N1][N2][N3], const double du[N1][N2][N3]) {
-    #pragma omp parallel for collapse(3) default(none) shared(u, du)
+    #pragma omp parallel for collapse(3) default(shared)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -58,7 +58,7 @@ void stat(double *stats, const double u[N1][N2][N3]) {
     double umin = 100.0;
     double umax = -100.0;
 
-    #pragma omp parallel for collapse(3) default(none) shared(u, stats) reduction(+:mean) reduction(min:umin) reduction(max:umax)
+    #pragma omp parallel for collapse(3) default(shared) reduction(+:mean) reduction(min:umin) reduction(max:umax)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -72,7 +72,7 @@ void stat(double *stats, const double u[N1][N2][N3]) {
             }
         }
     }
-    #pragma omp parallel for collapse(3) default(none) shared(u, mean) reduction(+:uvar)
+    #pragma omp parallel for collapse(3) default(shared) reduction(+:uvar)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
