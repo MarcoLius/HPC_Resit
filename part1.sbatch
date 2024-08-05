@@ -2,7 +2,7 @@
 
 # Request resources:
 #SBATCH -N 1		# number of compute nodes. 
-#SBATCH -c 2		# number of CPU cores, one per thread, up to 128
+#SBATCH -c 4		# number of CPU cores, one per thread, up to 128
 #SBATCH -o part1.%J.out
 #SBATCH -e part1.%J.err
 #SBATCH --mem=1G	# memory required, up to 250G on standard nodes
@@ -22,4 +22,4 @@ rm part1.dat part1
 cc -fopenmp -O3 part1.c -Wall -march=native -o part1 -lm
 
 # run part1 with 4 threads
-OMP_NUM_THREADS=2 ./part1
+OMP_NUM_THREADS=4 ./part1
