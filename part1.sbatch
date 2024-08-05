@@ -22,4 +22,4 @@ rm part1.dat part1
 cc -fopenmp -O3 part1.c -Wall -march=native -o part1 -lm
 
 # run part1 with 4 threads
-OMP_NUM_THREADS=2 ./part1
+OMP_NUM_THREADS=4 ./part1
