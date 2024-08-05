@@ -7,7 +7,7 @@
 
 
 void init(double u[N1][N2][N3]) {
-    #pragma omp parallel for default(shared) schedule(static) collapse(3)
+    #pragma omp parallel for collapse(3) default(none) shared(u)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -20,7 +20,7 @@ void init(double u[N1][N2][N3]) {
 void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
     double sum;
     int count;
-    #pragma omp parallel for default(shared) private(sum, count) schedule(dynamic, 4) collapse(3)
+    #pragma omp parallel for collapse(3) default(none) shared(u, du) private(sum, count) schedule(dynamic, 4)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -42,7 +42,7 @@ void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
 };
 
 void step(double u[N1][N2][N3], const double du[N1][N2][N3]) {
-    #pragma omp parallel for default(shared) schedule(static) collapse(3)
+    #pragma omp parallel for default(none) shared(u, du) collapse(3)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -58,7 +58,7 @@ void stat(double *stats, const double u[N1][N2][N3]) {
     double umin = 100.0;
     double umax = -100.0;
 
-    #pragma omp parallel for default(shared) reduction(+:mean) reduction(min:umin) reduction(max:umax) collapse(3)
+    #pragma omp parallel for default(none) shared(u) reduction(+:mean) reduction(min:umin) reduction(max:umax) collapse(3)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
@@ -72,7 +72,7 @@ void stat(double *stats, const double u[N1][N2][N3]) {
             }
         }
     }
-    #pragma omp parallel for default(shared) reduction(+:uvar) schedule(static) collapse(3)
+    #pragma omp parallel for default(none) shared(u, mean) reduction(+:uvar) schedule(static) collapse(3)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
