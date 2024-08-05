@@ -2,10 +2,10 @@
 
 # Request resources:
 #SBATCH -N 1		# number of compute nodes. 
-#SBATCH -c 1		# number of CPU cores, one per thread, up to 128
+#SBATCH -c 128		# number of CPU cores, one per thread, up to 128
 #SBATCH -o part1.%J.out
 #SBATCH -e part1.%J.err
-#SBATCH --mem=1G	# memory required, up to 250G on standard nodes
+#SBATCH --mem=16G	# memory required, up to 250G on standard nodes
 #SBATCH --time=0:15:0	# time limit for job (format:  days-hours:minutes:seconds)
 
 # Run in the 'shared' queue (job may share node with other jobs)
