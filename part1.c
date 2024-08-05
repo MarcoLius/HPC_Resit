@@ -20,7 +20,7 @@ void init(double u[N1][N2][N3]) {
 void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
     double sum;
     int count;
-    #pragma omp parallel for collapse(3) default(none) shared(u, du) private(sum, count) //schedule(dynamic, 4)
+    #pragma omp parallel for collapse(3) default(none) shared(u, du) private(sum, count) schedule(dynamic)
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
