@@ -186,7 +186,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < N1_local; i++) {
         for (int j = 0; j < 8; j++) {
             for (int k = 0; k < 8; k++) {
-                printf("local_u[%d][%d][%d] on process %d is %f", i, j, k, rank, local_u[i][j][k]);
+                printf("local_u[%d][%d][%d] on process %d is %f\n", i, j, k, rank, local_u[i][j][k]);
             }
         }
     }
@@ -199,9 +199,16 @@ int main(int argc, char **argv) {
     printf("u is gathered into the process %d\n", rank);
 
     MPI_Finalize();
-    /*
-    clock_t t0 = clock();                   // for timing serial code
 
+    for (int i = 0; i < N1_local; i++) {
+        for (int j = 0; j < 8; j++) {
+            for (int k = 0; k < 8; k++) {
+                printf("u[%d][%d][%d] is %f\n", i, j, k, u[i][j][k]);
+            }
+        }
+    }
+    clock_t t0 = clock();                   // for timing serial code
+    /*
     for (int m = 0; m < M; m++) {
         // Use MPI_Scatter to distribute the global array u to each process
         // MPI_Scatter(du, N1_local * N2 * N3, MPI_DOUBLE,
