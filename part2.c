@@ -185,7 +185,6 @@ int main(int argc, char **argv) {
                     0, MPI_COMM_WORLD);
     }
 
-
     printf("Process %d has received the u_local\n", rank);
 
     // Each process initialises its own part of the array
@@ -202,20 +201,20 @@ int main(int argc, char **argv) {
     clock_t t0 = clock();                   // for timing serial code
 
     for (int m = 0; m < M; m++) {
-
+        /*
         // Use MPI_Scatter to distribute the global array du to each process
         MPI_Scatter(du, N1_local * N2 * N3, MPI_DOUBLE,
                     local_du, N1_local * N2 * N3, MPI_DOUBLE,
                     0, MPI_COMM_WORLD);
         printf("Process %d has received the du_local\n", rank);
-
+        */
         dudt_local(u, local_du, rank);
-
+        /*
         MPI_Allgather(local_du, N1_local * N2 * N3, MPI_DOUBLE,
                       du, N1_local * N2 * N3, MPI_DOUBLE,
                       MPI_COMM_WORLD);
         printf("du is gathered into the process %d\n", rank);
-
+        */
 
         /*
         // Use MPI_Scatter to distribute the array u to each process
