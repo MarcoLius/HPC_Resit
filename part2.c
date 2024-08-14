@@ -8,23 +8,12 @@
 // Define a global variable to store the size of each process
 int N1_local;
 
+/*
 void init(double u[N1][N2][N3]) {
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
                 u[n1][n2][n3] = u0(n1, n2, n3);
-            }
-        }
-    }
-};
-
-// Rewrite the init function to make each process only initialise its own local_u, and then reduce them using MPI_Allgather
-void init_local_u(double local_u[N1_local][N2][N3], int rank) {
-    int start = rank * N1_local;
-    for (int n1 = 0; n1 < N1_local; n1++) {
-        for (int n2 = 0; n2 < N2; n2++) {
-            for (int n3 = 0; n3 < N3; n3++) {
-                local_u[n1][n2][n3] = u0(start + n1, n2, n3);
             }
         }
     }
@@ -51,6 +40,7 @@ void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
         }
     }
 };
+*/
 
 // Rewrite the dudt function to compute each process's own local_du, and then reduce them using MPI_Allgather
 void dudt_local(const double u[N1][N2][N3], double local_du[N1_local][N2][N3], int rank) {
@@ -185,6 +175,7 @@ int main(int argc, char **argv) {
 
     printf("u is gathered into the process %d\n", rank);
     MPI_Finalize();
+    /*
     clock_t t0 = clock();                   // for timing serial code
 
     for (int m = 0; m < M; m++) {
@@ -198,9 +189,10 @@ int main(int argc, char **argv) {
             writeInd = m / mm;
             stat(&stats[writeInd][0], u);     // Compute statistics and store in stat
         }
-        /*
+
+
         write(u, m);                        // Slow diagnostic output!
-        */
+
     }
     double t1 = (double) (clock() - t0) / (CLOCKS_PER_SEC);     // for timing serial code
 
@@ -219,5 +211,7 @@ int main(int argc, char **argv) {
            M, mm, 4, t2 / (4 * M / mm));
 
     //MPI_Finalize();
+
+    */
     return 0;
 };
