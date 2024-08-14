@@ -77,7 +77,7 @@ void dudt_local(const double u[N1][N2][N3], double local_du[N1_local][N2][N3], i
         }
     }
 }
-
+/*
 void step(double u[N1][N2][N3], const double du[N1][N2][N3]) {
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
@@ -138,7 +138,7 @@ void write(const double u[N1][N2][N3], const int m) {
         printf("Failed to write state_%i.txt!\n", m);
     }
 };
-
+*/
 
 int main(int argc, char **argv) {
 
@@ -155,7 +155,7 @@ int main(int argc, char **argv) {
     int writeInd = 0;
 
     printf("Process %d has the u\n", rank);
-
+    /*
     // Assume there are p processes, then split the 3 dimensions space evenly into p N1/p * N2 * N3 square block
     N1_local = N1 / size;
 
@@ -186,6 +186,7 @@ int main(int argc, char **argv) {
                   MPI_COMM_WORLD);
 
     printf("u is gathered into the process %d\n", rank);
+    */
     MPI_Finalize();
     /*
     clock_t t0 = clock();                   // for timing serial code
