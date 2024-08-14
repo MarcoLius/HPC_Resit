@@ -18,7 +18,7 @@ void init(double u[N1][N2][N3]) {
         }
     }
 };
-
+*/
 void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
     double sum;
     int count;
@@ -40,7 +40,7 @@ void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
         }
     }
 };
-*/
+
 
 // Rewrite the init function to make each process only initialise its own local_u, and then reduce them using MPI_Allgather
 void init_local_u(double local_u[N1_local][N2][N3], int rank) {
@@ -77,7 +77,7 @@ void dudt_local(const double u[N1][N2][N3], double local_du[N1_local][N2][N3], i
         }
     }
 }
-/*
+
 void step(double u[N1][N2][N3], const double du[N1][N2][N3]) {
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
@@ -118,7 +118,7 @@ void stat(double *stats, const double u[N1][N2][N3]) {
     stats[2] = umax;
     stats[3] = uvar;
 };
-
+/*
 void write(const double u[N1][N2][N3], const int m) {
     char outfile[80];
     int fileSuccess = sprintf(outfile, "state_%i.txt", m);
@@ -184,8 +184,8 @@ int main(int argc, char **argv) {
     printf("Initialisation finished on process %d\n", rank);
 
     for (int i = 0; i < N1_local; i++) {
-        for (int j = 0; j < 8; j++) {
-            for (int k = 0; k < 8; k++) {
+        for (int j = 0; j < N2; j++) {
+            for (int k = 0; k < N3; k++) {
                 printf("local_u[%d][%d][%d] on process %d is %f\n", i, j, k, rank, local_u[i][j][k]);
             }
         }
@@ -198,35 +198,37 @@ int main(int argc, char **argv) {
 
     printf("u is gathered into the process %d\n", rank);
 
-    MPI_Finalize();
-
     for (int i = 0; i < N1_local; i++) {
-        for (int j = 0; j < 8; j++) {
-            for (int k = 0; k < 8; k++) {
+        for (int j = 0; j < N2; j++) {
+            for (int k = 0; k < N3; k++) {
                 printf("u[%d][%d][%d] is %f\n", i, j, k, u[i][j][k]);
             }
         }
     }
     clock_t t0 = clock();                   // for timing serial code
-    /*
-    for (int m = 0; m < M; m++) {
-        // Use MPI_Scatter to distribute the global array u to each process
-        // MPI_Scatter(du, N1_local * N2 * N3, MPI_DOUBLE,
-        //            local_du, N1_local * N2 * N3, MPI_DOUBLE,
-        //            0, MPI_COMM_WORLD);
-        dudt(u, du);
-        step(u, du);
-        if (m % mm == 0) {
-            writeInd = m / mm;
-            stat(&stats[writeInd][0], u);     // Compute statistics and store in stat
+
+    if (rank == 0) {
+
+
+        for (int m = 0; m < M; m++) {
+            // Use MPI_Scatter to distribute the global array u to each process
+            // MPI_Scatter(du, N1_local * N2 * N3, MPI_DOUBLE,
+            //            local_du, N1_local * N2 * N3, MPI_DOUBLE,
+            //            0, MPI_COMM_WORLD);
+            dudt(u, du);
+            step(u, du);
+            if (m % mm == 0) {
+                writeInd = m / mm;
+                stat(&stats[writeInd][0], u);     // Compute statistics and store in stat
+            }
+
+
+            //write(u, m);                        // Slow diagnostic output!
+
         }
-
-
-        write(u, m);                        // Slow diagnostic output!
-
+        double t1 = (double) (clock() - t0) / (CLOCKS_PER_SEC);     // for timing serial code
     }
-    double t1 = (double) (clock() - t0) / (CLOCKS_PER_SEC);     // for timing serial code
-
+    /*
     FILE *fptr = fopen("part2.dat", "w");
     fprintf(fptr, "iter\t\tmean\t\tmin\t\tmax\t\tvar\n");  // write stats to file
     for (int m = 0; m < (M / mm); m++) {
@@ -240,9 +242,8 @@ int main(int argc, char **argv) {
            N1, N2, N3, t1 / (N1 * N2 * N3 * M));
     printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
            M, mm, 4, t2 / (4 * M / mm));
-
-    //MPI_Finalize();
-
     */
+
+    MPI_Finalize();
     return 0;
 };
