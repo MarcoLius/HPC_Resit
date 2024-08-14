@@ -83,6 +83,7 @@ void stat(double *stats, const double u[N1][N2][N3]) {
     stats[3] = uvar;
 };
 
+/*
 void write(const double u[N1][N2][N3], const int m) {
     char outfile[80];
     int fileSuccess = sprintf(outfile, "state_%i.txt", m);
@@ -102,6 +103,7 @@ void write(const double u[N1][N2][N3], const int m) {
         printf("Failed to write state_%i.txt!\n", m);
     }
 };
+*/
 
 // Rewrite the init function to make each process only initialise its own local_u, and then reduce them using MPI_Allgather
 void init_local_u(double local_u[N1_local][N2][N3], int rank) {
@@ -229,6 +231,7 @@ int main(int argc, char **argv) {
                       u, N1_local * N2 * N3, MPI_DOUBLE,
                       MPI_COMM_WORLD);
         */
+
         step(u, du);
         if (m % mm == 0) {
             writeInd = m / mm;
