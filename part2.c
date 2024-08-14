@@ -203,8 +203,6 @@ int main(int argc, char **argv) {
     double stats[M / mm][4];
     int writeInd = 0;
 
-    printf("Process %d has the u\n", rank);
-
     // Assume there are p processes, then split the 3 dimensions space evenly into p N1/p * N2 * N3 square block
     N1_local = N1 / size;
 
@@ -212,25 +210,18 @@ int main(int argc, char **argv) {
     double local_u[N1_local][N2][N3];
     double local_du[N1_local][N2][N3];
 
-    printf("Process %d has the du\n", rank);
-
     // Use MPI_Scatter to distribute the array u to each process
     MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
                 local_u, N1_local * N2 * N3, MPI_DOUBLE,
                 0, MPI_COMM_WORLD);
 
-    printf("Process %d has received the u_local\n", rank);
-
     // Each process initialises its own part of the array
     init_local_u(local_u, rank);
-    printf("Initialisation finished on process %d\n", rank);
 
     // Use MPI_Gather to gather the initialised parts back to all processes
     MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
                   u, N1_local * N2 * N3, MPI_DOUBLE,
                   MPI_COMM_WORLD);
-
-    printf("u is gathered into the process %d\n", rank);
 
     clock_t t0 = clock();                   // for timing serial code
 
@@ -238,7 +229,7 @@ int main(int argc, char **argv) {
         // Use the complete array u on each process to compute the local_du, for avoiding the boundary problem
         dudt_local(u, local_du, rank);
 
-        // Use MPI_Scatter to distribute the array u to each process
+        // Use MPI_Scatter to distribute the array u to each process for computations below
         MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
                     local_u, N1_local * N2 * N3, MPI_DOUBLE,
                     0, MPI_COMM_WORLD);
@@ -248,10 +239,10 @@ int main(int argc, char **argv) {
 
         if (m % mm == 0) {
             writeInd = m / mm;
-            stat_local(&stats[writeInd][0], local_u);     // Compute statistics and store in stat
+            stat_local(&stats[writeInd][0], local_u);     // Compute statistics on each process, reduce them and store in stat
         }
 
-        // Use MPI_Gather to gather the results back to all processes
+        // Use MPI_Gather to gather the local_u back to all processes
         MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
                       u, N1_local * N2 * N3, MPI_DOUBLE,
                       MPI_COMM_WORLD);
