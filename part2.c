@@ -176,7 +176,7 @@ int main(int argc, char **argv) {
                   MPI_COMM_WORLD);
 
     printf("u is gathered into the process %d\n", rank);
-
+    MPI_Finalize();
     clock_t t0 = clock();                   // for timing serial code
 
     for (int m = 0; m < M; m++) {
@@ -206,6 +206,6 @@ int main(int argc, char **argv) {
     printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
            M, mm, 4, t2 / (4 * M / mm));
 
-    MPI_Finalize();
+    //MPI_Finalize();
     return 0;
 };
