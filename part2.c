@@ -200,42 +200,40 @@ int main(int argc, char **argv) {
 
     clock_t t0 = clock();                   // for timing serial code
 
+    for (int m = 0; m < M; m++) {
+        // Use MPI_Scatter to distribute the global array u to each process
+        // MPI_Scatter(du, N1_local * N2 * N3, MPI_DOUBLE,
+        //            local_du, N1_local * N2 * N3, MPI_DOUBLE,
+        //            0, MPI_COMM_WORLD);
+        dudt(u, du);
+        step(u, du);
+        if (m % mm == 0) {
+            writeInd = m / mm;
+            stat(&stats[writeInd][0], u);     // Compute statistics and store in stat
+        }
+
+
+        //write(u, m);                        // Slow diagnostic output!
+
+    }
+    double t1 = (double) (clock() - t0) / (CLOCKS_PER_SEC);     // for timing serial code
+
     if (rank == 0) {
 
-
-        for (int m = 0; m < M; m++) {
-            // Use MPI_Scatter to distribute the global array u to each process
-            // MPI_Scatter(du, N1_local * N2 * N3, MPI_DOUBLE,
-            //            local_du, N1_local * N2 * N3, MPI_DOUBLE,
-            //            0, MPI_COMM_WORLD);
-            dudt(u, du);
-            step(u, du);
-            if (m % mm == 0) {
-                writeInd = m / mm;
-                stat(&stats[writeInd][0], u);     // Compute statistics and store in stat
-            }
-
-
-            //write(u, m);                        // Slow diagnostic output!
-
+        FILE *fptr = fopen("part2.dat", "w");
+        fprintf(fptr, "iter\t\tmean\t\tmin\t\tmax\t\tvar\n");  // write stats to file
+        for (int m = 0; m < (M / mm); m++) {
+            fprintf(fptr, "%6.0f\t%02.5f\t%02.5f\t%02.5f\t%02.5f\n",
+                    (double) (m * mm), stats[m][0], stats[m][1], stats[m][2], stats[m][3]);
         }
-        double t1 = (double) (clock() - t0) / (CLOCKS_PER_SEC);     // for timing serial code
-    }
-    /*
-    FILE *fptr = fopen("part2.dat", "w");
-    fprintf(fptr, "iter\t\tmean\t\tmin\t\tmax\t\tvar\n");  // write stats to file
-    for (int m = 0; m < (M / mm); m++) {
-        fprintf(fptr, "%6.0f\t%02.5f\t%02.5f\t%02.5f\t%02.5f\n",
-                (double) (m * mm), stats[m][0], stats[m][1], stats[m][2], stats[m][3]);
-    }
-    fclose(fptr);
+        fclose(fptr);
 
-    double t2 = (double) (clock() - t0) / (CLOCKS_PER_SEC) - t1; // timing writes
-    printf("(%3d,%3d,%3d): average iteration time per element:\t%02.16fs\n",
-           N1, N2, N3, t1 / (N1 * N2 * N3 * M));
-    printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
-           M, mm, 4, t2 / (4 * M / mm));
-    */
+        double t2 = (double) (clock() - t0) / (CLOCKS_PER_SEC) - t1; // timing writes
+        printf("(%3d,%3d,%3d): average iteration time per element:\t%02.16fs\n",
+               N1, N2, N3, t1 / (N1 * N2 * N3 * M));
+        printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
+               M, mm, 4, t2 / (4 * M / mm));
+    }
 
     MPI_Finalize();
     return 0;
