@@ -140,17 +140,17 @@ void write(const double u[N1][N2][N3], const int m) {
 
 int main(int argc, char **argv) {
 
-    double u[N1][N2][N3];
-    double du[N1][N2][N3];
-    double stats[M / mm][4];
-    int writeInd = 0;
-
     // Initialize the MPI program
     int rank;
     int size;
     MPI_Init(&argc, &argv);
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    double u[N1][N2][N3];
+    double du[N1][N2][N3];
+    double stats[M / mm][4];
+    int writeInd = 0;
 
     printf("Process %d has the u\n", rank);
 
@@ -161,10 +161,18 @@ int main(int argc, char **argv) {
     double local_u[N1_local][N2][N3];
     double local_du[N1_local][N2][N3];
 
-    // Use MPI_Scatter to distribute the global array u to each process
-    MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
-                local_u, N1_local * N2 * N3, MPI_DOUBLE,
-                0, MPI_COMM_WORLD);
+    if (rank == 0) {
+        // Use MPI_Scatter to distribute the global array u to each process
+        MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
+                    local_u, N1_local * N2 * N3, MPI_DOUBLE,
+                    0, MPI_COMM_WORLD);
+
+    } else {
+        MPI_Scatter(NULL, N1_local * N2 * N3, MPI_DOUBLE,
+                    local_u, N1_local * N2 * N3, MPI_DOUBLE,
+                    0, MPI_COMM_WORLD);
+    }
+
 
     printf("Process %d has received the u_local\n", rank);
 
@@ -177,14 +185,14 @@ int main(int argc, char **argv) {
                   MPI_COMM_WORLD);
 
     printf("u is gathered into the process %d\n", rank);
-
+    MPI_Finalize();
     clock_t t0 = clock();                   // for timing serial code
 
     for (int m = 0; m < M; m++) {
         // Use MPI_Scatter to distribute the global array u to each process
-        MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
-                    local_u, N1_local * N2 * N3, MPI_DOUBLE,
-                    0, MPI_COMM_WORLD);
+        // MPI_Scatter(du, N1_local * N2 * N3, MPI_DOUBLE,
+        //            local_du, N1_local * N2 * N3, MPI_DOUBLE,
+        //            0, MPI_COMM_WORLD);
         dudt(u, du);
         step(u, du);
         if (m % mm == 0) {
@@ -211,6 +219,6 @@ int main(int argc, char **argv) {
     printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
            M, mm, 4, t2 / (4 * M / mm));
 
-    MPI_Finalize();
+    //MPI_Finalize();
     return 0;
 };
