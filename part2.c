@@ -195,21 +195,22 @@ int main(int argc, char **argv) {
     clock_t t0 = clock();                   // for timing serial code
 
     for (int m = 0; m < M; m++) {
-        /*
+
         // Use MPI_Scatter to distribute the global array du to each process
         MPI_Scatter(du, N1_local * N2 * N3, MPI_DOUBLE,
                     local_du, N1_local * N2 * N3, MPI_DOUBLE,
                     0, MPI_COMM_WORLD);
         printf("Process %d has received the du_local\n", rank);
-        */
+
         dudt_local(u, local_du, rank);
-        /*
+
         MPI_Allgather(local_du, N1_local * N2 * N3, MPI_DOUBLE,
                       du, N1_local * N2 * N3, MPI_DOUBLE,
                       MPI_COMM_WORLD);
         printf("du is gathered into the process %d\n", rank);
-        */
 
+
+        /*
         // Use MPI_Scatter to distribute the array u to each process
         MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
                     local_u, N1_local * N2 * N3, MPI_DOUBLE,
@@ -221,7 +222,8 @@ int main(int argc, char **argv) {
         MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
                       u, N1_local * N2 * N3, MPI_DOUBLE,
                       MPI_COMM_WORLD);
-
+        */
+        step(u, du);
         if (m % mm == 0) {
             writeInd = m / mm;
             stat(&stats[writeInd][0], u);     // Compute statistics and store in stat
