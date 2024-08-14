@@ -163,7 +163,7 @@ int main(int argc, char **argv) {
     }
     double t1 = (double) (clock() - t0) / (CLOCKS_PER_SEC);     // for timing serial code
 
-    FILE *fptr = fopen("stats.dat", "w");
+    FILE *fptr = fopen("part2.dat", "w");
     fprintf(fptr, "iter\t\tmean\t\tmin\t\tmax\t\tvar\n");  // write stats to file
     for (int m = 0; m < (M / mm); m++) {
         fprintf(fptr, "%6.0f\t%02.5f\t%02.5f\t%02.5f\t%02.5f\n",
