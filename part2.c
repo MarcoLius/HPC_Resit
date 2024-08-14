@@ -42,6 +42,18 @@ void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
 };
 */
 
+// Rewrite the init function to make each process only initialise its own local_u, and then reduce them using MPI_Allgather
+void init_local_u(double local_u[N1_local][N2][N3], int rank) {
+    int start = rank * N1_local;
+    for (int n1 = 0; n1 < N1_local; n1++) {
+        for (int n2 = 0; n2 < N2; n2++) {
+            for (int n3 = 0; n3 < N3; n3++) {
+                local_u[n1][n2][n3] = u0(start + n1, n2, n3);
+            }
+        }
+    }
+};
+
 // Rewrite the dudt function to compute each process's own local_du, and then reduce them using MPI_Allgather
 void dudt_local(const double u[N1][N2][N3], double local_du[N1_local][N2][N3], int rank) {
     double sum;
