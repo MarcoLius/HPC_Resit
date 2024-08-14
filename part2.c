@@ -212,7 +212,7 @@ int main(int argc, char **argv) {
         printf("du is gathered into the process %d\n", rank);
         */
 
-        /*
+
         // Use MPI_Scatter to distribute the array u to each process
         MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
                     local_u, N1_local * N2 * N3, MPI_DOUBLE,
@@ -224,9 +224,9 @@ int main(int argc, char **argv) {
         MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
                       u, N1_local * N2 * N3, MPI_DOUBLE,
                       MPI_COMM_WORLD);
-        */
 
-        step(u, du);
+
+        //step(u, du);
         if (m % mm == 0) {
             writeInd = m / mm;
             stat(&stats[writeInd][0], u);     // Compute statistics and store in stat
