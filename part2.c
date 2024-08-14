@@ -176,16 +176,10 @@ int main(int argc, char **argv) {
 
     printf("Process %d has the du\n", rank);
 
-    if (rank == 0){
-        // Use MPI_Scatter to distribute the array u to each process
-        MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
-                    local_u, N1_local * N2 * N3, MPI_DOUBLE,
-                    0, MPI_COMM_WORLD);
-    } else {
-        MPI_Scatter(NULL, N1_local * N2 * N3, MPI_DOUBLE,
-                    local_u, N1_local * N2 * N3, MPI_DOUBLE,
-                    0, MPI_COMM_WORLD);
-    }
+    // Use MPI_Scatter to distribute the array u to each process
+    MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
+                local_u, N1_local * N2 * N3, MPI_DOUBLE,
+                0, MPI_COMM_WORLD);
 
     printf("Process %d has received the u_local\n", rank);
 
