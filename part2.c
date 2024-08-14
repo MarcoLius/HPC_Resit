@@ -162,7 +162,9 @@ int main(int argc, char **argv) {
     // Define the local array u and du on each process
     double local_u[N1_local][N2][N3];
     double local_du[N1_local][N2][N3];
-    /*
+
+    printf("Process %d has the du\n", rank);
+
     if (rank == 0) {
         // Use MPI_Scatter to distribute the global array u to each process
         MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
@@ -176,7 +178,7 @@ int main(int argc, char **argv) {
     }
 
     printf("Process %d has received the u_local\n", rank);
-
+    /*
     // Each process initialises its own part of the array
     init_local_u(local_u, rank);
 
