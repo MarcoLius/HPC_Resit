@@ -178,10 +178,10 @@ int main(int argc, char **argv) {
     }
 
     printf("Process %d has received the u_local\n", rank);
-    /*
+
     // Each process initialises its own part of the array
     init_local_u(local_u, rank);
-
+    /*
     // Use MPI_Gather to gather the initialised parts back to all processes
     MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
                   u, N1_local * N2 * N3, MPI_DOUBLE,
