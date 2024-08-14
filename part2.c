@@ -18,6 +18,7 @@ void init(double u[N1][N2][N3]) {
     }
 };
 
+// Rewrite the init function to make each process only initialise its own local_u, and then reduce them using MPI_Allgather
 void init_local_u(double local_u[N1_local][N2][N3], int rank) {
     int start = rank * N1_local;
     for (int n1 = 0; n1 < N1_local; n1++) {
@@ -50,6 +51,30 @@ void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
         }
     }
 };
+
+// Rewrite the dudt function to compute each process's own local_du, and then reduce them using MPI_Allgather
+void dudt_local(const double u[N1][N2][N3], double local_du[N1_local][N2][N3], int rank) {
+    double sum;
+    int count;
+    int start = rank * N1_local;
+    for (int n1 = start; n1 < start + N1_local; n1++) {
+        for (int n2 = 0; n2 < N2; n2++) {
+            for (int n3 = 0; n3 < N3; n3++) {
+                sum = 0.0;
+                count = 0;
+                for (int l1 = imax(0, n1 - ml); l1 <= imin(n1 + ml, N1 - 1); l1++) {
+                    for (int l2 = imax(0, n2 - ml); l2 <= imin(n2 + ml, N2 - 1); l2++) {
+                        for (int l3 = imax(0, n3 - ml); l3 <= imin(n3 + ml, N3 - 1); l3++) {
+                            sum += u[l1][l2][l3];
+                            count++;
+                        }
+                    }
+                }
+                local_du[n1 - start][n2][n3] = (sum / count);     // Store the result into local_du
+            }
+        }
+    }
+}
 
 void step(double u[N1][N2][N3], const double du[N1][N2][N3]) {
     for (int n1 = 0; n1 < N1; n1++) {
@@ -127,6 +152,8 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    printf("Process %d has the u\n", rank);
+
     // Assume there are p processes, then split the 3 dimensions space evenly into p N1/p * N2 * N3 square block
     N1_local = N1 / size;
 
@@ -138,7 +165,7 @@ int main(int argc, char **argv) {
                 local_u, N1_local * N2 * N3, MPI_DOUBLE,
                 0, MPI_COMM_WORLD);
 
-    printf("The local_u of process %d was received", rank);
+    printf("Process %d has received the u_local\n", rank);
 
     // Each process initialises its own part of the array
     init_local_u(local_u, rank);
@@ -147,6 +174,8 @@ int main(int argc, char **argv) {
     MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
                   u, N1_local * N2 * N3, MPI_DOUBLE,
                   MPI_COMM_WORLD);
+
+    printf("u is gathered into the process %d\n", rank);
 
     clock_t t0 = clock();                   // for timing serial code
 
