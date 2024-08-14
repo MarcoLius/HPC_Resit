@@ -198,13 +198,6 @@ int main(int argc, char **argv) {
 
     printf("u is gathered into the process %d\n", rank);
 
-    for (int i = 0; i < N1_local; i++) {
-        for (int j = 0; j < N2; j++) {
-            for (int k = 0; k < N3; k++) {
-                printf("u[%d][%d][%d] is %f\n", i, j, k, u[i][j][k]);
-            }
-        }
-    }
     clock_t t0 = clock();                   // for timing serial code
 
     if (rank == 0) {
