@@ -183,14 +183,6 @@ int main(int argc, char **argv) {
     init_local_u(local_u, rank);
     printf("Initialisation finished on process %d\n", rank);
 
-    for (int i = 0; i < N1_local; i++) {
-        for (int j = 0; j < N2; j++) {
-            for (int k = 0; k < N3; k++) {
-                printf("local_u[%d][%d][%d] on process %d is %f\n", i, j, k, rank, local_u[i][j][k]);
-            }
-        }
-    }
-
     // Use MPI_Gather to gather the initialised parts back to all processes
     MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
                   u, N1_local * N2 * N3, MPI_DOUBLE,
