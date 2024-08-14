@@ -5,12 +5,25 @@
 #include <time.h>    /* For OpenMP & MPI implementations, use their walltime! */
 #include "mpi.h"
 
+// Define a global variable to store the size of each process
+int N1_local;
 
 void init(double u[N1][N2][N3]) {
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
             for (int n3 = 0; n3 < N3; n3++) {
                 u[n1][n2][n3] = u0(n1, n2, n3);
+            }
+        }
+    }
+};
+
+void init_local_u(double local_u[N1_local][N2][N3], int rank) {
+    int start = rank * N1_local;
+    for (int n1 = 0; n1 < N1_local; n1++) {
+        for (int n2 = 0; n2 < N2; n2++) {
+            for (int n3 = 0; n3 < N3; n3++) {
+                local_u[n1][n2][n3] = u0(start + n1, n2, n3);
             }
         }
     }
@@ -107,7 +120,33 @@ int main(int argc, char **argv) {
     double stats[M / mm][4];
     int writeInd = 0;
 
-    init(u);
+    // Initialize the MPI program
+    int rank;
+    int size;
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+    // Assume there are p processes, then split the 3 dimensions space evenly into p N1/p * N2 * N3 square block
+    N1_local = N1 / size;
+
+    // Define the local array u on each process
+    double local_u[N1_local][N2][N3];
+
+    // Use MPI_Scatter to distribute the global array u to each process
+    MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
+                local_u, N1_local * N2 * N3, MPI_DOUBLE,
+                0, MPI_COMM_WORLD);
+
+    printf("The local_u of process %d was received", rank);
+
+    // Each process initialises its own part of the array
+    init_local_u(local_u, rank);
+
+    // Use MPI_Gather to gather the initialised parts back to all processes
+    MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
+                  u, N1_local * N2 * N3, MPI_DOUBLE,
+                  MPI_COMM_WORLD);
 
     clock_t t0 = clock();                   // for timing serial code
 
@@ -138,5 +177,6 @@ int main(int argc, char **argv) {
     printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
            M, mm, 4, t2 / (4 * M / mm));
 
+    MPI_Finalize();
     return 0;
 };
