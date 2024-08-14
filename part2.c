@@ -181,6 +181,7 @@ int main(int argc, char **argv) {
 
     // Each process initialises its own part of the array
     init_local_u(local_u, rank);
+    printf("Initialisation finished on process %d\n", rank);
     /*
     // Use MPI_Gather to gather the initialised parts back to all processes
     MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
