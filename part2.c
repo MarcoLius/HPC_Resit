@@ -157,8 +157,9 @@ int main(int argc, char **argv) {
     // Assume there are p processes, then split the 3 dimensions space evenly into p N1/p * N2 * N3 square block
     N1_local = N1 / size;
 
-    // Define the local array u on each process
+    // Define the local array u and du on each process
     double local_u[N1_local][N2][N3];
+    double local_du[N1_local][N2][N3];
 
     // Use MPI_Scatter to distribute the global array u to each process
     MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
@@ -176,10 +177,14 @@ int main(int argc, char **argv) {
                   MPI_COMM_WORLD);
 
     printf("u is gathered into the process %d\n", rank);
-    MPI_Finalize();
+
     clock_t t0 = clock();                   // for timing serial code
 
     for (int m = 0; m < M; m++) {
+        // Use MPI_Scatter to distribute the global array u to each process
+        MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
+                    local_u, N1_local * N2 * N3, MPI_DOUBLE,
+                    0, MPI_COMM_WORLD);
         dudt(u, du);
         step(u, du);
         if (m % mm == 0) {
@@ -206,6 +211,6 @@ int main(int argc, char **argv) {
     printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
            M, mm, 4, t2 / (4 * M / mm));
 
-    //MPI_Finalize();
+    MPI_Finalize();
     return 0;
 };
