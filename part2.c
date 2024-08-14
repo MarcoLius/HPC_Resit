@@ -50,7 +50,6 @@ void step(double u[N1][N2][N3], const double du[N1][N2][N3]) {
         }
     }
 };
-*/
 
 void stat(double *stats, const double u[N1][N2][N3]) {
     double mean = 0.0;
@@ -83,7 +82,6 @@ void stat(double *stats, const double u[N1][N2][N3]) {
     stats[3] = uvar;
 };
 
-/*
 void write(const double u[N1][N2][N3], const int m) {
     char outfile[80];
     int fileSuccess = sprintf(outfile, "state_%i.txt", m);
@@ -151,6 +149,46 @@ void step_local(double local_u[N1_local][N2][N3], const double local_du[N1_local
     }
 };
 
+void stat_local(double *stats, const double local_u[N1_local][N2][N3]) {
+    double mean = 0.0;
+    double uvar = 0.0;
+    double umin = 100.0;
+    double umax = -100.0;
+    for (int n1 = 0; n1 < N1_local; n1++) {
+        for (int n2 = 0; n2 < N2; n2++) {
+            for (int n3 = 0; n3 < N3; n3++) {
+                mean += local_u[n1][n2][n3] / (N1 * N2 * N3);
+                if (local_u[n1][n2][n3] > umax) {
+                    umax = local_u[n1][n2][n3];
+                }
+                if (local_u[n1][n2][n3] < umin) {
+                    umin = local_u[n1][n2][n3];
+                }
+            }
+        }
+    }
+    // Use MPI_Allreduce function to reduce each part of statistical data into one value
+    MPI_Allreduce(&mean, &mean, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+    MPI_Allreduce(&umax, &umax, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+    MPI_Allreduce(&umin, &umin, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+
+    for (int n1 = 0; n1 < N1_local; n1++) {
+        for (int n2 = 0; n2 < N2; n2++) {
+            for (int n3 = 0; n3 < N3; n3++) {
+                uvar += (local_u[n1][n2][n3] - mean) * (local_u[n1][n2][n3] - mean) / (N1 * N2 * N3);
+            }
+        }
+    }
+
+    MPI_Allreduce(&uvar, &uvar, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+
+    stats[0] = mean;
+    stats[1] = umin;
+    stats[2] = umax;
+    stats[3] = uvar;
+};
+
+
 int main(int argc, char **argv) {
 
     // Initialize the MPI program
@@ -197,41 +235,26 @@ int main(int argc, char **argv) {
     clock_t t0 = clock();                   // for timing serial code
 
     for (int m = 0; m < M; m++) {
-        /*
-        // Use MPI_Scatter to distribute the global array du to each process
-        MPI_Scatter(du, N1_local * N2 * N3, MPI_DOUBLE,
-                    local_du, N1_local * N2 * N3, MPI_DOUBLE,
-                    0, MPI_COMM_WORLD);
-        printf("Process %d has received the du_local\n", rank);
-        */
+        // Use the complete array u on each process to compute the local_du, for avoiding the boundary problem
         dudt_local(u, local_du, rank);
-        /*
-        MPI_Allgather(local_du, N1_local * N2 * N3, MPI_DOUBLE,
-                      du, N1_local * N2 * N3, MPI_DOUBLE,
-                      MPI_COMM_WORLD);
-        printf("du is gathered into the process %d\n", rank);
-        */
-
 
         // Use MPI_Scatter to distribute the array u to each process
         MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
                     local_u, N1_local * N2 * N3, MPI_DOUBLE,
                     0, MPI_COMM_WORLD);
 
+        // Update the local_u on each process by each own local_du
         step_local(local_u, local_du);
+
+        if (m % mm == 0) {
+            writeInd = m / mm;
+            stat_local(&stats[writeInd][0], local_u);     // Compute statistics and store in stat
+        }
 
         // Use MPI_Gather to gather the results back to all processes
         MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
                       u, N1_local * N2 * N3, MPI_DOUBLE,
                       MPI_COMM_WORLD);
-
-
-        //step(u, du);
-        if (m % mm == 0) {
-            writeInd = m / mm;
-            stat(&stats[writeInd][0], u);     // Compute statistics and store in stat
-        }
-
 
         //write(u, m);                        // Slow diagnostic output!
 
