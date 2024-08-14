@@ -173,7 +173,6 @@ int main(int argc, char **argv) {
                     0, MPI_COMM_WORLD);
     }
 
-
     printf("Process %d has received the u_local\n", rank);
 
     // Each process initialises its own part of the array
