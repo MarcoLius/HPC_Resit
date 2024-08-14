@@ -40,7 +40,6 @@ void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
         }
     }
 };
-*/
 
 void step(double u[N1][N2][N3], const double du[N1][N2][N3]) {
     for (int n1 = 0; n1 < N1; n1++) {
@@ -51,6 +50,7 @@ void step(double u[N1][N2][N3], const double du[N1][N2][N3]) {
         }
     }
 };
+*/
 
 void stat(double *stats, const double u[N1][N2][N3]) {
     double mean = 0.0;
