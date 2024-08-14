@@ -42,42 +42,6 @@ void dudt(const double u[N1][N2][N3], double du[N1][N2][N3]) {
 };
 */
 
-// Rewrite the init function to make each process only initialise its own local_u, and then reduce them using MPI_Allgather
-void init_local_u(double local_u[N1_local][N2][N3], int rank) {
-    int start = rank * N1_local;
-    for (int n1 = 0; n1 < N1_local; n1++) {
-        for (int n2 = 0; n2 < N2; n2++) {
-            for (int n3 = 0; n3 < N3; n3++) {
-                local_u[n1][n2][n3] = u0(start + n1, n2, n3);
-            }
-        }
-    }
-};
-
-// Rewrite the dudt function to compute each process's own local_du, and then reduce them using MPI_Allgather
-void dudt_local(const double u[N1][N2][N3], double local_du[N1_local][N2][N3], int rank) {
-    double sum;
-    int count;
-    int start = rank * N1_local;
-    for (int n1 = start; n1 < start + N1_local; n1++) {
-        for (int n2 = 0; n2 < N2; n2++) {
-            for (int n3 = 0; n3 < N3; n3++) {
-                sum = 0.0;
-                count = 0;
-                for (int l1 = imax(0, n1 - ml); l1 <= imin(n1 + ml, N1 - 1); l1++) {
-                    for (int l2 = imax(0, n2 - ml); l2 <= imin(n2 + ml, N2 - 1); l2++) {
-                        for (int l3 = imax(0, n3 - ml); l3 <= imin(n3 + ml, N3 - 1); l3++) {
-                            sum += u[l1][l2][l3];
-                            count++;
-                        }
-                    }
-                }
-                local_du[n1 - start][n2][n3] = (sum / count);     // Store the result into local_du
-            }
-        }
-    }
-}
-
 void step(double u[N1][N2][N3], const double du[N1][N2][N3]) {
     for (int n1 = 0; n1 < N1; n1++) {
         for (int n2 = 0; n2 < N2; n2++) {
@@ -118,7 +82,7 @@ void stat(double *stats, const double u[N1][N2][N3]) {
     stats[2] = umax;
     stats[3] = uvar;
 };
-/*
+
 void write(const double u[N1][N2][N3], const int m) {
     char outfile[80];
     int fileSuccess = sprintf(outfile, "state_%i.txt", m);
@@ -138,7 +102,52 @@ void write(const double u[N1][N2][N3], const int m) {
         printf("Failed to write state_%i.txt!\n", m);
     }
 };
-*/
+
+// Rewrite the init function to make each process only initialise its own local_u, and then reduce them using MPI_Allgather
+void init_local_u(double local_u[N1_local][N2][N3], int rank) {
+    int start = rank * N1_local;
+    for (int n1 = 0; n1 < N1_local; n1++) {
+        for (int n2 = 0; n2 < N2; n2++) {
+            for (int n3 = 0; n3 < N3; n3++) {
+                local_u[n1][n2][n3] = u0(start + n1, n2, n3);
+            }
+        }
+    }
+};
+
+// Rewrite the dudt function to compute each process's own local_du, and then reduce them using MPI_Allgather
+void dudt_local(const double u[N1][N2][N3], double local_du[N1_local][N2][N3], int rank) {
+    double sum;
+    int count;
+    int start = rank * N1_local;
+    for (int n1 = start; n1 < start + N1_local; n1++) {
+        for (int n2 = 0; n2 < N2; n2++) {
+            for (int n3 = 0; n3 < N3; n3++) {
+                sum = 0.0;
+                count = 0;
+                for (int l1 = imax(0, n1 - ml); l1 <= imin(n1 + ml, N1 - 1); l1++) {
+                    for (int l2 = imax(0, n2 - ml); l2 <= imin(n2 + ml, N2 - 1); l2++) {
+                        for (int l3 = imax(0, n3 - ml); l3 <= imin(n3 + ml, N3 - 1); l3++) {
+                            sum += u[l1][l2][l3];
+                            count++;
+                        }
+                    }
+                }
+                local_du[n1 - start][n2][n3] = (sum / count);     // Store the result into local_du
+            }
+        }
+    }
+};
+
+void step_local(double local_u[N1_local][N2][N3], const double local_du[N1_local][N2][N3]) {
+    for (int n1 = 0; n1 < N1_local; n1++) {
+        for (int n2 = 0; n2 < N2; n2++) {
+            for (int n3 = 0; n3 < N3; n3++) {
+                local_u[n1][n2][n3] = r * local_du[n1][n2][n3] * (1.0 - local_du[n1][n2][n3]);
+            }
+        }
+    }
+};
 
 int main(int argc, char **argv) {
 
@@ -165,17 +174,10 @@ int main(int argc, char **argv) {
 
     printf("Process %d has the du\n", rank);
 
-    if (rank == 0) {
-        // Use MPI_Scatter to distribute the global array u to each process
-        MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
-                    local_u, N1_local * N2 * N3, MPI_DOUBLE,
-                    0, MPI_COMM_WORLD);
-
-    } else {
-        MPI_Scatter(NULL, N1_local * N2 * N3, MPI_DOUBLE,
-                    local_u, N1_local * N2 * N3, MPI_DOUBLE,
-                    0, MPI_COMM_WORLD);
-    }
+    // Use MPI_Scatter to distribute the array u to each process
+    MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
+                local_u, N1_local * N2 * N3, MPI_DOUBLE,
+                0, MPI_COMM_WORLD);
 
     printf("Process %d has received the u_local\n", rank);
 
@@ -193,20 +195,33 @@ int main(int argc, char **argv) {
     clock_t t0 = clock();                   // for timing serial code
 
     for (int m = 0; m < M; m++) {
+        /*
         // Use MPI_Scatter to distribute the global array du to each process
         MPI_Scatter(du, N1_local * N2 * N3, MPI_DOUBLE,
                     local_du, N1_local * N2 * N3, MPI_DOUBLE,
                     0, MPI_COMM_WORLD);
         printf("Process %d has received the du_local\n", rank);
-
+        */
         dudt_local(u, local_du, rank);
-
+        /*
         MPI_Allgather(local_du, N1_local * N2 * N3, MPI_DOUBLE,
                       du, N1_local * N2 * N3, MPI_DOUBLE,
                       MPI_COMM_WORLD);
         printf("du is gathered into the process %d\n", rank);
+        */
 
-        step(u, du);
+        // Use MPI_Scatter to distribute the array u to each process
+        MPI_Scatter(u, N1_local * N2 * N3, MPI_DOUBLE,
+                    local_u, N1_local * N2 * N3, MPI_DOUBLE,
+                    0, MPI_COMM_WORLD);
+
+        step_local(local_u, local_du);
+
+        // Use MPI_Gather to gather the results back to all processes
+        MPI_Allgather(local_u, N1_local * N2 * N3, MPI_DOUBLE,
+                      u, N1_local * N2 * N3, MPI_DOUBLE,
+                      MPI_COMM_WORLD);
+
         if (m % mm == 0) {
             writeInd = m / mm;
             stat(&stats[writeInd][0], u);     // Compute statistics and store in stat
