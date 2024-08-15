@@ -264,7 +264,7 @@ int main(int argc, char **argv) {
 
         double t2 = (double) (clock() - t0) / (CLOCKS_PER_SEC) - t1; // timing writes
         printf("(%3d,%3d,%3d): average iteration time per element:\t%02.16fs\n",
-               N1, N2, N3, t1 / (long long)(N1 * N2 * N3 * M));
+               N1, N2, N3, t1 / ((long long)N1 * N2 * N3 * M));
         printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
                M, mm, 4, t2 / (4 * M / mm));
     }
