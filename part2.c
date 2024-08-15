@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
 
     }
     double t1 = (double) (clock() - t0) / (CLOCKS_PER_SEC);     // for timing serial code
-
+    /*
     if (rank == 0) {
 
         FILE *fptr = fopen("part2.dat", "w");
@@ -262,6 +262,32 @@ int main(int argc, char **argv) {
         }
         fclose(fptr);
 
+        double t2 = (double) (clock() - t0) / (CLOCKS_PER_SEC) - t1; // timing writes
+        printf("(%3d,%3d,%3d): average iteration time per element:\t%02.16fs\n",
+               N1, N2, N3, t1 / (N1 * N2 * N3 * M));
+        printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
+               M, mm, 4, t2 / (4 * M / mm));
+    }
+    */
+    MPI_File fptr;
+    MPI_File_open(MPI_COMM_WORLD, "part2.dat", MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fptr);
+    char write_buf[100];
+    int write_start = rank * (M / mm / size);
+    int write_end = write_start + (M / mm / size);
+    int offset = 0;
+    if (rank == 0) {
+        sprintf(write_buf, "iter\t\tmean\t\tmin\t\tmax\t\tvar\n");
+        MPI_File_write_at(fptr, offset, write_buf, 100, MPI_CHAR, MPI_STATUS_IGNORE);
+        offset += 100;
+    }
+    for (int m = write_start; m < write_end; m++) {
+        sprintf(write_buf, "%6.0f\t%02.5f\t%02.5f\t%02.5f\t%02.5f\n",
+                (double) (m * mm), stats[m][0], stats[m][1], stats[m][2], stats[m][3]);
+        MPI_File_write_at(fptr, offset, write_buf, 100, MPI_CHAR, MPI_STATUS_IGNORE);
+        offset += 100;
+    }
+    MPI_File_close(&fptr);
+    if (rank == 0) {
         double t2 = (double) (clock() - t0) / (CLOCKS_PER_SEC) - t1; // timing writes
         printf("(%3d,%3d,%3d): average iteration time per element:\t%02.16fs\n",
                N1, N2, N3, t1 / (N1 * N2 * N3 * M));
