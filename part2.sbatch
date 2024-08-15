@@ -2,7 +2,7 @@
 
 # Request resources:
 #SBATCH -N 1		# number of compute nodes. 
-#SBATCH -n 2		# number of MPI ranks (1 per CPU core)
+#SBATCH -n 4		# number of MPI ranks (1 per CPU core)
 #SBATCH -o part2.%J.out
 #SBATCH -e part2.%J.err
 #SBATCH --mem=1G	# memory required per node, in units M, G or T
@@ -22,4 +22,4 @@ rm part2.dat part2
 mpicc -O3 part2.c -Wall -march=native -o part2 -lm
 
 # run part2 with 4 processes (from #SBATCH -n, above)
-mpirun -np 2 ./part2
+mpirun -np 4 ./part2
