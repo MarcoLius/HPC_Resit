@@ -251,7 +251,7 @@ int main(int argc, char **argv) {
 
     }
     double t1 = (double) (clock() - t0) / (CLOCKS_PER_SEC);     // for timing serial code
-    /*
+
     if (rank == 0) {
 
         FILE *fptr = fopen("part2.dat", "w");
@@ -268,7 +268,9 @@ int main(int argc, char **argv) {
         printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
                M, mm, 4, t2 / (4 * M / mm));
     }
-    */
+
+    // Deprecate using MPI_IO to write the stats to file because it will randomize the order of writing
+    /*
     MPI_File fptr;
     MPI_File_open(MPI_COMM_WORLD, "part2.dat", MPI_MODE_CREATE | MPI_MODE_WRONLY, MPI_INFO_NULL, &fptr);
     char write_buf[100];
@@ -294,6 +296,7 @@ int main(int argc, char **argv) {
         printf("(%5d,%3d,%1d): average write time per element:\t\t%02.16fs\n",
                M, mm, 4, t2 / (4 * M / mm));
     }
+    */
 
     MPI_Finalize();
     return 0;
