@@ -1,7 +1,7 @@
 #pragma once
 #include <math.h>
 
-const int N1 = 256;
+const int N1 = 512;
 const int N2 = 32;
 const int N3 = 32;
 const int M = 50000;
